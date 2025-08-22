@@ -34,3 +34,4 @@
 
 # build folders
 build/
+*.egg-info/

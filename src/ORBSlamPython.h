@@ -4,16 +4,16 @@
 #include <memory>
 #include <Python.h>
 #include <boost/python.hpp>
-#include <ORB_SLAM2/System.h>
-#include <ORB_SLAM2/Tracking.h>
+#include "System.h"
+#include "Tracking.h"
 
 class ORBSlamPython
 {
 public:
     ORBSlamPython(std::string vocabFile, std::string settingsFile,
-                  ORB_SLAM2::System::eSensor sensorMode = ORB_SLAM2::System::eSensor::RGBD);
+                  ORB_SLAM3::System::eSensor sensorMode = ORB_SLAM3::System::eSensor::RGBD);
     ORBSlamPython(const char *vocabFile, const char *settingsFile,
-                  ORB_SLAM2::System::eSensor sensorMode = ORB_SLAM2::System::eSensor::RGBD);
+                  ORB_SLAM3::System::eSensor sensorMode = ORB_SLAM3::System::eSensor::RGBD);
     ~ORBSlamPython();
 
     bool initialize();
@@ -29,7 +29,7 @@ public:
     void activateSLAMTraking();
     void deactivateSLAMTraking();
     boost::python::list getCurrentPoints() const;
-    ORB_SLAM2::Tracking::eTrackingState getTrackingState() const;
+    ORB_SLAM3::Tracking::eTrackingState getTrackingState() const;
     PyObject* getCameraMatrix() const;
     PyObject* getFramePose() const;
     unsigned int getNumFeatures() const;
@@ -40,7 +40,7 @@ public:
     boost::python::list getTrackedMappoints() const;
     bool saveSettings(boost::python::dict settings) const;
     boost::python::dict loadSettings() const;
-    void setMode(ORB_SLAM2::System::eSensor mode);
+    void setMode(ORB_SLAM3::System::eSensor mode);
     void setRGBMode(bool rgb);
     void setUseViewer(bool useViewer);
 
@@ -50,8 +50,8 @@ public:
 private:
     std::string vocabluaryFile;
     std::string settingsFile;
-    ORB_SLAM2::System::eSensor sensorMode;
-    std::shared_ptr<ORB_SLAM2::System> system;
+    ORB_SLAM3::System::eSensor sensorMode;
+    std::shared_ptr<ORB_SLAM3::System> system;
     bool bUseViewer;
     bool bUseRGB;
 };
