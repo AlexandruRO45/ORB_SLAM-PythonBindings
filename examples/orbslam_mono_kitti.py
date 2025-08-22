@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import sys
 import os.path
-import orbslam2
+import orbslam3
 import time
 import cv2
 
@@ -11,7 +11,7 @@ def main(vocab_path, settings_path, sequence_path):
     image_filenames, timestamps = load_images(sequence_path)
     num_images = len(image_filenames)
 
-    slam = orbslam2.System(vocab_path, settings_path, orbslam2.Sensor.MONOCULAR)
+    slam = orbslam3.System(vocab_path, settings_path, orbslam3.Sensor.MONOCULAR)
     slam.set_use_viewer(True)
     slam.initialize()
 
