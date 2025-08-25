@@ -55,6 +55,13 @@ class CMakeBuild(build_ext):
             # Suppress unnecessary CMake developer warnings
             "-Wno-dev",
         ]
+        
+        # Check for a Pangolin_DIR environment variable to locate Pangolin
+        # USE export Pangolin_DIR="<path_to_user>/Pangolin-0.9.1/build" if not system installed
+        pangolin_dir = os.environ.get("Pangolin_DIR")
+        if pangolin_dir:
+            print(f"Found Pangolin_DIR environment variable: {pangolin_dir}")
+            cmake_args.append(f"-DCMAKE_PREFIX_PATH={pangolin_dir}")
 
         # Allow user to pass extra CMake arguments via environment variable
         if "CMAKE_ARGS" in os.environ:

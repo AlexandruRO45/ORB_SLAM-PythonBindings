@@ -6,11 +6,19 @@ IF(NOT CMAKE_BUILD_TYPE)
 ENDIF()
 
 MESSAGE("Build type: " ${CMAKE_BUILD_TYPE})
-LIST(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake_modules)
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # --- Find Dependencies ---
+LIST(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake_modules)
+
+if(DEFINED ENV{Pangolin_DIR})
+  list(APPEND CMAKE_PREFIX_PATH "$ENV{Pangolin_DIR}")
+  message(STATUS "Using Pangolin_DIR from environment: $ENV{Pangolin_DIR}")
+endif()
+find_package(Pangolin REQUIRED)
+message(STATUS "Found Pangolin ${PANGOLIN_INCLUDE_DIR} ${PANGOLIN_LIBRARY}")
+
 find_package(Python 3 COMPONENTS Interpreter Development REQUIRED)
 find_package(NumPy REQUIRED)
 if(NOT NumPy_INCLUDE_DIR AND DEFINED NUMPY_INCLUDE_DIR)
@@ -18,11 +26,10 @@ if(NOT NumPy_INCLUDE_DIR AND DEFINED NUMPY_INCLUDE_DIR)
   message(STATUS "Using NumPy include directory from setup.py: ${NumPy_INCLUDE_DIR}")
 endif()
 
-find_package(Boost REQUIRED)
+find_package(Boost REQUIRED COMPONENTS python)
 message(STATUS "Found Boost.Python component: ${Boost_LIBRARIES}")
-
 find_package(OpenCV REQUIRED)
-find_package(Pangolin)
+message(STATUS "Found OPENCV ${OpenCV_LIBS}")
 
 # --- Set Global Compiler Flags ---
 set(BASE_CXX_FLAGS "-Wall -D_LINUX -D_REENTRANT -Wno-unused-variable -Wno-maybe-uninitialized -Wno-deprecated-declarations")
