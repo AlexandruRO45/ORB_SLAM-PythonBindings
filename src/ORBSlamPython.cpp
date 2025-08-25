@@ -62,17 +62,23 @@ BOOST_PYTHON_MODULE(orbslam3)
     boost::python::enum_<ORB_SLAM3::System::eSensor>("Sensor")
         .value("MONOCULAR", ORB_SLAM3::System::eSensor::MONOCULAR)
         .value("STEREO", ORB_SLAM3::System::eSensor::STEREO)
-        .value("RGBD", ORB_SLAM3::System::eSensor::RGBD);
+        .value("RGBD", ORB_SLAM3::System::eSensor::RGBD)
+        .value("IMU_MONOCULAR", ORB_SLAM3::System::eSensor::IMU_MONOCULAR)
+        .value("IMU_STEREO", ORB_SLAM3::System::eSensor::IMU_STEREO)
+        .value("IMU_RGBD", ORB_SLAM3::System::eSensor::IMU_RGBD);
 
     boost::python::class_<ORBSlamPython, boost::noncopyable>("System", boost::python::init<const char *, const char *, boost::python::optional<ORB_SLAM3::System::eSensor>>())
         .def(boost::python::init<std::string, std::string, boost::python::optional<ORB_SLAM3::System::eSensor>>())
         .def("initialize", &ORBSlamPython::initialize)
         .def("load_and_process_mono", &ORBSlamPython::loadAndProcessMono)
         .def("process_image_mono", &ORBSlamPython::processMono)
+        .def("process_image_mono_inertial", &ORBSlamPython::processMono_Inertial)
         .def("load_and_process_stereo", &ORBSlamPython::loadAndProcessStereo)
         .def("process_image_stereo", &ORBSlamPython::processStereo)
+        .def("process_image_stereo_inertial", &ORBSlamPython::processStereo_Inertial)
         .def("load_and_process_rgbd", &ORBSlamPython::loadAndProcessRGBD)
         .def("process_image_rgbd", &ORBSlamPython::processRGBD)
+        .def("process_image_rgbd_inertial", &ORBSlamPython::processRGBD_Inertial)
         .def("shutdown", &ORBSlamPython::shutdown)
         .def("is_running", &ORBSlamPython::isRunning)
         .def("reset", &ORBSlamPython::reset)
@@ -236,6 +242,65 @@ bool ORBSlamPython::processRGBD(cv::Mat image, cv::Mat depthImage, double timest
         return false;
     }
 }
+
+// --- IMU BLOCK ---
+
+std::vector<ORB_SLAM3::IMU::Point> parse_imu_data(boost::python::list imu_data) {
+    std::vector<ORB_SLAM3::IMU::Point> vImuMeas;
+    for (int i = 0; i < boost::python::len(imu_data); ++i) {
+        boost::python::tuple measurement = boost::python::extract<boost::python::tuple>(imu_data[i]);
+        double ax = boost::python::extract<double>(measurement[0]);
+        double ay = boost::python::extract<double>(measurement[1]);
+        double az = boost::python::extract<double>(measurement[2]);
+        double gx = boost::python::extract<double>(measurement[3]);
+        double gy = boost::python::extract<double>(measurement[4]);
+        double gz = boost::python::extract<double>(measurement[5]);
+        double ts = boost::python::extract<double>(measurement[6]);
+        vImuMeas.push_back(ORB_SLAM3::IMU::Point(ax, ay, az, gx, gy, gz, ts));
+    }
+    return vImuMeas;
+}
+
+bool ORBSlamPython::processMono_Inertial(cv::Mat image, double timestamp, boost::python::list imu_data) {
+    if (!system) {
+        return false;
+    }
+    if (image.data) {
+        auto vImuMeas = parse_imu_data(imu_data);
+        Sophus::SE3f pose = system->TrackMonocular(image, timestamp, vImuMeas);
+        return pose.so3().log().allFinite();
+    } else {
+        return false;
+    }
+}
+
+bool ORBSlamPython::processStereo_Inertial(cv::Mat leftImage, cv::Mat rightImage, double timestamp, boost::python::list imu_data) {
+    if (!system) {
+        return false;
+    }
+    if (leftImage.data && rightImage.data) {
+        auto vImuMeas = parse_imu_data(imu_data);
+        Sophus::SE3f pose = system->TrackStereo(leftImage, rightImage, timestamp, vImuMeas);
+        return pose.so3().log().allFinite();
+    } else {
+        return false;
+    }
+}
+
+bool ORBSlamPython::processRGBD_Inertial(cv::Mat image, cv::Mat depthImage, double timestamp, boost::python::list imu_data) {
+    if (!system) {
+        return false;
+    }
+    if (image.data && depthImage.data) {
+        auto vImuMeas = parse_imu_data(imu_data);
+        Sophus::SE3f pose = system->TrackRGBD(image, depthImage, timestamp, vImuMeas);
+        return pose.so3().log().allFinite();
+    } else {
+        return false;
+    }
+}
+
+// --- END OF IMU BLOCK ---
 
 void ORBSlamPython::shutdown()
 {

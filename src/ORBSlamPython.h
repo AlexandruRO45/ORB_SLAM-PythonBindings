@@ -20,10 +20,13 @@ public:
     bool isRunning();
     bool loadAndProcessMono(std::string imageFile, double timestamp);
     bool processMono(cv::Mat image, double timestamp);
+    bool processMono_Inertial(cv::Mat image, double timestamp, boost::python::list imu_data);
     bool loadAndProcessStereo(std::string leftImageFile, std::string rightImageFile, double timestamp);
     bool processStereo(cv::Mat leftImage, cv::Mat rightImage, double timestamp);
+    bool processStereo_Inertial(cv::Mat leftImage, cv::Mat rightImage, double timestamp, boost::python::list imu_data);
     bool loadAndProcessRGBD(std::string imageFile, std::string depthImageFile, double timestamp);
     bool processRGBD(cv::Mat image, cv::Mat depthImage, double timestamp);
+    bool processRGBD_Inertial(cv::Mat image, cv::Mat depthImage, double timestamp, boost::python::list imu_data);
     void reset();
     void shutdown();
     void activateSLAMTraking();

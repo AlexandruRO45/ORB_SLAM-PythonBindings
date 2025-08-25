@@ -26,7 +26,7 @@ if(NOT NumPy_INCLUDE_DIR AND DEFINED NUMPY_INCLUDE_DIR)
   message(STATUS "Using NumPy include directory from setup.py: ${NumPy_INCLUDE_DIR}")
 endif()
 
-find_package(Boost REQUIRED COMPONENTS python)
+find_package(Boost REQUIRED COMPONENTS python thread system)
 message(STATUS "Found Boost.Python component: ${Boost_LIBRARIES}")
 find_package(OpenCV REQUIRED)
 message(STATUS "Found OPENCV ${OpenCV_LIBS}")
@@ -51,8 +51,7 @@ add_subdirectory(orbslam3)
 set(PYTHON_MODULE_NAME orbslam3_python) 
 add_library(${PYTHON_MODULE_NAME} SHARED
   src/ORBSlamPython.cpp
-  src/pyboost_cv2_converter.cpp
-  src/pyboost_cv3_converter.cpp
+  src/pyboostcvconverter/pyboost_cv3_converter.cpp
 )
 
 # Set properties to create the correct python module filename (e.g., "orbslam3.so")
