@@ -34,14 +34,15 @@ message(STATUS "Found OPENCV ${OpenCV_LIBS}")
 # --- Set Global Compiler Flags ---
 set(BASE_CXX_FLAGS "-Wall -D_LINUX -D_REENTRANT -Wno-unused-variable -Wno-maybe-uninitialized -Wno-deprecated-declarations")
 if(CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64|armv8")
-  set(ARCH_FLAGS "-O3 -march=native")
+  set(ARCH_FLAGS "-O3 -march=armv8-a")
 elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "arm")
   set(ARCH_FLAGS "-O3 -mfpu=neon -march=armv7-a")
 else() # x86_64
-  set(ARCH_FLAGS "-O3 -mmmx -msse -msse2 -msse3 -mssse3 -march=native")
+  set(ARCH_FLAGS "-O3 -mmmx -msse -msse2 -msse3 -mssse3")
 endif()
 
 # Append these flags to the default CMake flags
+set(CMAKE_C_FLAGS "${CMAKE_CXX_FLAGS} ${BASE_CXX_FLAGS} ${ARCH_FLAGS}")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${BASE_CXX_FLAGS} ${ARCH_FLAGS}")
 
 # --- Add Core ORB_SLAM3 Library ---
@@ -87,6 +88,10 @@ if(Pangolin_FOUND)
 endif()
 
 # --- Output Paths ---
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib)
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib)
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin)
+# set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib)
+# set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib)
+# set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+set_target_properties(${PYTHON_MODULE_NAME} PROPERTIES
+  INSTALL_RPATH "$ORIGIN"
+)
