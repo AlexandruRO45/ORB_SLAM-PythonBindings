@@ -13,7 +13,7 @@ yum install -y \
     eigen3-devel glew-devel libX11-devel mesa-libGL-devel libpng-devel \
     libXext-devel libtiff-devel libXv-devel libjpeg-turbo-devel \
     suitesparse-devel cmake gcc-c++ make git wget unzip yasm pkg-config \
-    libavc1394-devel openssl-devel tbb-devel
+    libavc1394-devel openssl-devel tbb-devel bzip2-devel libffi-devel
 
 # --- Build OpenCV ---
 OPENCV_VERSION="4.8.0"
