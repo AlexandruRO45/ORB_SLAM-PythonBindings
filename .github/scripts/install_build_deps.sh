@@ -2,10 +2,28 @@
 set -e
 set -o pipefail
 
+# === ADD THIS DEBUGGING BLOCK START ===
+echo "--- Verifying the Python Environment ---"
+echo "Running Python version: $(python --version)"
+echo "Path to Python executable: $(which python)"
+echo "Searching for Python.h header file..."
+# This command will find the main Python header if it exists.
+# The '|| true' ensures the script doesn't fail if it's not found.
+find /opt/python -name "Python.h" || true
+echo "--- Verification Complete ---"
+# === ADD THIS DEBUGGING BLOCK END ===
 
 echo "--- Installing Python-specific dependencies... ---"
 PY_VERSION=$(python -c "import sys; print(f'{sys.version_info.major}{sys.version_info.minor}')")
-yum install -y python${PY_VERSION}-devel
+case $PY_VERSION in
+    38|39)
+        echo "Installing python${PY_VERSION}-devel from yum..."
+        yum install -y "python${PY_VERSION}-devel"
+        ;;
+    *)
+        echo "Skipping yum install, headers for Python ${PY_VERSION} are pre-included by cibuildwheel."
+        ;;
+esac
 
 # --- Build Boost against the current Python version ---
 BOOST_VERSION="1.82.0"
