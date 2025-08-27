@@ -19,7 +19,7 @@ tar -xzf "Python-${PY_VERSION}.tgz"
 cd "Python-${PY_VERSION}"
 
 # Configure with an isolated prefix and enable shared library for boost_python
-./configure --enable-optimizations
+./configure --enable-optimizations --enable-shared
 make -j$(nproc)
 make install
 rm -rf "/Python-${PY_VERSION}" "/Python-${PY_VERSION}.tgz"
