@@ -44,6 +44,7 @@ jobs:
       - name: Build wheels
         env:
           CIBW_BEFORE_ALL_LINUX: bash .github/scripts/install_sys_deps.sh
+          CIBW_BEFORE_BUILD_LINUX: bash .github/scripts/install_build_deps.sh
           CIBW_PLATFORM: linux
           CIBW_ARCHS: ${{ matrix.arch }}
           CIBW_MANYLINUX_X86_64_IMAGE: manylinux_2_28
@@ -52,7 +53,7 @@ jobs:
           CIBW_BUILD_VERBOSITY: 1
           CIBW_BUILD: "cp38-* cp39-* cp310-* cp311-* cp312-*"
           CIBW_ENVIRONMENT: >
-            CMAKE_ARGS="-DCMAKE_BUILD_TYPE=Release -DBOOST_ROOT=/usr/local/boost -DBoost_NO_SYSTEM_PATHS=ON"
+            CMAKE_ARGS="-DCMAKE_BUILD_TYPE=Release"
             Pangolin_DIR=/usr/local/pangolin/lib/cmake/Pangolin
         run: |
           python -m cibuildwheel --output-dir wheelhouse

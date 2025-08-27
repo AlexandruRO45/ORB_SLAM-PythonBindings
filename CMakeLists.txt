@@ -26,7 +26,7 @@ if(NOT NumPy_INCLUDE_DIR AND DEFINED NUMPY_INCLUDE_DIR)
   message(STATUS "Using NumPy include directory from setup.py: ${NumPy_INCLUDE_DIR}")
 endif()
 
-find_package(Boost REQUIRED COMPONENTS python thread system)
+find_package(Boost REQUIRED COMPONENTS python thread system serialization)
 message(STATUS "Found Boost.Python component: ${Boost_LIBRARIES}")
 find_package(OpenCV REQUIRED)
 message(STATUS "Found OPENCV ${OpenCV_LIBS}")
