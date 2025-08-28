@@ -81,7 +81,7 @@ target_link_libraries(${PYTHON_MODULE_NAME} PRIVATE
   ORB_SLAM3
   ${OpenCV_LIBS}
   ${Boost_LIBRARIES}
-  ${Python_LIBRARIES}
+  # ${Python_LIBRARIES}
 )
 if(Pangolin_FOUND)
   target_link_libraries(${PYTHON_MODULE_NAME} PRIVATE ${Pangolin_LIBRARIES})
