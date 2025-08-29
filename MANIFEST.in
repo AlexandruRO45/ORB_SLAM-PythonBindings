@@ -1,9 +1,0 @@
-include README.md
-include LICENSE
-include pyproject.toml
-include CMakeLists.txt
-recursive-include src *.cpp *.h
-recursive-include orbslam3 *.txt *.h *.cc *.cpp
-recursive-include orbslam3/Vocabulary *.txt *.bin
-recursive-include cmake_modules *.cmake
-exclude tests/*
