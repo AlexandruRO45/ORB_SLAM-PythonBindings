@@ -4,32 +4,35 @@
 #include <memory>
 #include <Python.h>
 #include <boost/python.hpp>
-#include <ORB_SLAM2/System.h>
-#include <ORB_SLAM2/Tracking.h>
+#include "System.h"
+#include "Tracking.h"
 
 class ORBSlamPython
 {
 public:
     ORBSlamPython(std::string vocabFile, std::string settingsFile,
-                  ORB_SLAM2::System::eSensor sensorMode = ORB_SLAM2::System::eSensor::RGBD);
+                  ORB_SLAM3::System::eSensor sensorMode = ORB_SLAM3::System::eSensor::RGBD);
     ORBSlamPython(const char *vocabFile, const char *settingsFile,
-                  ORB_SLAM2::System::eSensor sensorMode = ORB_SLAM2::System::eSensor::RGBD);
+                  ORB_SLAM3::System::eSensor sensorMode = ORB_SLAM3::System::eSensor::RGBD);
     ~ORBSlamPython();
 
     bool initialize();
     bool isRunning();
     bool loadAndProcessMono(std::string imageFile, double timestamp);
     bool processMono(cv::Mat image, double timestamp);
+    bool processMono_Inertial(cv::Mat image, double timestamp, boost::python::list imu_data);
     bool loadAndProcessStereo(std::string leftImageFile, std::string rightImageFile, double timestamp);
     bool processStereo(cv::Mat leftImage, cv::Mat rightImage, double timestamp);
+    bool processStereo_Inertial(cv::Mat leftImage, cv::Mat rightImage, double timestamp, boost::python::list imu_data);
     bool loadAndProcessRGBD(std::string imageFile, std::string depthImageFile, double timestamp);
     bool processRGBD(cv::Mat image, cv::Mat depthImage, double timestamp);
+    bool processRGBD_Inertial(cv::Mat image, cv::Mat depthImage, double timestamp, boost::python::list imu_data);
     void reset();
     void shutdown();
     void activateSLAMTraking();
     void deactivateSLAMTraking();
     boost::python::list getCurrentPoints() const;
-    ORB_SLAM2::Tracking::eTrackingState getTrackingState() const;
+    ORB_SLAM3::Tracking::eTrackingState getTrackingState() const;
     PyObject* getCameraMatrix() const;
     PyObject* getFramePose() const;
     unsigned int getNumFeatures() const;
@@ -40,7 +43,7 @@ public:
     boost::python::list getTrackedMappoints() const;
     bool saveSettings(boost::python::dict settings) const;
     boost::python::dict loadSettings() const;
-    void setMode(ORB_SLAM2::System::eSensor mode);
+    void setMode(ORB_SLAM3::System::eSensor mode);
     void setRGBMode(bool rgb);
     void setUseViewer(bool useViewer);
 
@@ -50,8 +53,8 @@ public:
 private:
     std::string vocabluaryFile;
     std::string settingsFile;
-    ORB_SLAM2::System::eSensor sensorMode;
-    std::shared_ptr<ORB_SLAM2::System> system;
+    ORB_SLAM3::System::eSensor sensorMode;
+    std::shared_ptr<ORB_SLAM3::System> system;
     bool bUseViewer;
     bool bUseRGB;
 };

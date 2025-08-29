@@ -2,7 +2,7 @@
 import sys
 import os.path
 import numpy as np
-import orbslam2
+import orbslam3
 import time
 import cv2
 
@@ -17,7 +17,7 @@ def main(vocab_path, settings_path, path_to_left_folder, path_to_right_folder, p
 
     num_images = len(left_filenames)
 
-    slam = orbslam2.System(vocab_path, settings_path, orbslam2.Sensor.STEREO)
+    slam = orbslam3.System(vocab_path, settings_path, orbslam3.Sensor.STEREO)
     slam.set_use_viewer(True)
     slam.initialize()
 
