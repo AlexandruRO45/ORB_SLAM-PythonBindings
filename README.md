@@ -1,16 +1,3 @@
-# ORB-SLAM3
-
-Python bindings for the ORB-SLAM3 visual SLAM library.
-
-## Installation
-
-```bash
-pip install orbslam3-python
-```
-
-<details>
-  <summary>TODO (Click me)</summary>
-
 # Changes from Original Version of ORB_SLAM2-PythonBindings
 
 ## add method for retrieve the intrinsic parameter of camera

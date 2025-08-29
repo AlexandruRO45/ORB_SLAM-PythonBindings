@@ -29,7 +29,7 @@
 # PYTHON_NUMPY_FOUND
 # will be set by this script
 
-cmake_minimum_required(VERSION 2.8...3.5)
+cmake_minimum_required(VERSION 2.6)
 
 if(NOT PYTHON_EXECUTABLE)
   if(NumPy_FIND_QUIETLY)
