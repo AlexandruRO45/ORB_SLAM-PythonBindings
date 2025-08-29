@@ -55,6 +55,14 @@ jobs:
           CIBW_ENVIRONMENT: >
             CMAKE_ARGS="-DCMAKE_BUILD_TYPE=Release"
             Pangolin_DIR=/usr/local/pangolin/lib/cmake/Pangolin
+          CIBW_REPAIR_WHEEL_COMMAND_LINUX: >
+            auditwheel repair -w {dest_dir} {wheel}
+            --exclude libGL.so.1
+            --exclude libGLX.so.0
+            --exclude libGLU.so.1
+            --exclude libEGL.so.1
+            --exclude libOpenGL.so.0
+            --exclude libGLdispatch.so.0
         run: |
           python -m cibuildwheel --output-dir wheelhouse
 
