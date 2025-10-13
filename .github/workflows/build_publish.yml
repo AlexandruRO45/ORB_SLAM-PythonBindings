@@ -38,7 +38,6 @@ jobs:
         uses: Jimver/cuda-toolkit@v0.2.24
         id: cuda-toolkit
         with:
-          cuda: ${{ matrix.cuda_version }}
           method: 'network'
           sub-packages: '["nvcc", "cudart"]'
           log-file-suffix: '${{matrix.os}}-${{matrix.arch}}.txt'
