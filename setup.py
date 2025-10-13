@@ -1,3 +1,14 @@
+"""
+Setup script for ORB-SLAM3 Enhanced Python Bindings
+
+This uses setuptools with a custom CMake build extension to compile
+the C++ ORB-SLAM3 wrapper with enhanced features including:
+- Hardware detection (CPU/GPU)
+- Power mode management (HIGH/LOW)
+- Comprehensive performance metrics
+- Confidence-based outputs
+"""
+
 import os
 import subprocess
 import sys
@@ -20,6 +31,7 @@ class CMakeExtension(Extension):
 class CMakeBuild(build_ext):
     """
     Custom build_ext command to drive the CMake build process.
+    Supports both enhanced and legacy bindings.
     """
     def build_extension(self, ext: CMakeExtension):
         # Import numpy here, only when building, to ensure it's installed
@@ -37,9 +49,15 @@ class CMakeBuild(build_ext):
 
         # Allow user to override build type with an environment variable
         build_type = os.environ.get("CMAKE_BUILD_TYPE", "Release")
+        
+        # Check if enhanced bindings should be built
+        build_enhanced = os.environ.get("BUILD_ENHANCED_BINDINGS", "ON")
+        enable_cuda = os.environ.get("ENABLE_CUDA", "OFF")
 
         print(f"Building extension for Python {sys.version}")
         print(f"Extension output directory: {extdir}")
+        print(f"Enhanced bindings: {build_enhanced}")
+        print(f"CUDA support: {enable_cuda}")
 
         # Define the arguments to pass to CMake
         cmake_args = [
@@ -52,6 +70,10 @@ class CMakeBuild(build_ext):
             # Pass header paths (though modern find_package(Python) is often sufficient)
             f"-DPYTHON_INCLUDE_DIR={python_include_dir}",
             f"-DNUMPY_INCLUDE_DIR={numpy_include_dir}",
+            # Enhanced bindings flag
+            f"-DBUILD_ENHANCED_BINDINGS={build_enhanced}",
+            # CUDA support flag
+            f"-DENABLE_CUDA={enable_cuda}",
             # Suppress unnecessary CMake developer warnings
             "-Wno-dev",
         ]
@@ -63,6 +85,12 @@ class CMakeBuild(build_ext):
             print(f"Found Pangolin_DIR environment variable: {pangolin_dir}")
             cmake_args.append(f"-DCMAKE_PREFIX_PATH={pangolin_dir}")
 
+        # Check for ORB_SLAM3_DIR if needed
+        orbslam3_dir = os.environ.get("ORB_SLAM3_DIR")
+        if orbslam3_dir:
+            print(f"Found ORB_SLAM3_DIR environment variable: {orbslam3_dir}")
+            cmake_args.append(f"-DORB_SLAM3_DIR={orbslam3_dir}")
+
         # Allow user to pass extra CMake arguments via environment variable
         if "CMAKE_ARGS" in os.environ:
             cmake_args += os.environ["CMAKE_ARGS"].split()
@@ -72,33 +100,84 @@ class CMakeBuild(build_ext):
         build_temp.mkdir(parents=True, exist_ok=True)
 
         # 1. Configure the project with CMake
-        print(f"Configuring CMake project with: {' '.join(cmake_args)}")
-        subprocess.check_call(
-            ["cmake", str(ext.sourcedir)] + cmake_args, cwd=build_temp
-        )
+        print(f"\n{'='*70}")
+        print("CONFIGURING CMAKE PROJECT")
+        print(f"{'='*70}")
+        print(f"CMake args: {' '.join(cmake_args)}")
+        print(f"{'='*70}\n")
+        
+        try:
+            subprocess.check_call(
+                ["cmake", str(ext.sourcedir)] + cmake_args, 
+                cwd=build_temp
+            )
+        except subprocess.CalledProcessError as e:
+            print(f"\n{'='*70}")
+            print("CMAKE CONFIGURATION FAILED")
+            print(f"{'='*70}")
+            print("Possible issues:")
+            print("  1. CMake version too old (requires >= 3.4)")
+            print("  2. Missing dependencies (Pangolin, OpenCV, Eigen3, Boost)")
+            print("  3. ORB_SLAM3 not found (set ORB_SLAM3_DIR environment variable)")
+            print(f"{'='*70}\n")
+            raise
 
         # Allow user to override the number of parallel build jobs
-        # build_jobs = os.environ.get("CMAKE_BUILD_PARALLEL_LEVEL")
-        # if not build_jobs:
-        #     build_jobs = str(os.cpu_count() or 8) # Default to number of CPUs
-        build_jobs = str(8)
+        build_jobs = os.environ.get("CMAKE_BUILD_PARALLEL_LEVEL")
+        if not build_jobs:
+            build_jobs = str(os.cpu_count() or 8) # Default to number of CPUs
 
         # 2. Build the project
-        print(f"Building project with {build_jobs} parallel jobs")
-        subprocess.check_call(
-            ["cmake", "--build", ".", "--parallel", build_jobs],
-            cwd=build_temp
-        )
+        print(f"\n{'='*70}")
+        print(f"BUILDING PROJECT WITH {build_jobs} PARALLEL JOBS")
+        print(f"{'='*70}\n")
+        
+        try:
+            subprocess.check_call(
+                ["cmake", "--build", ".", "--parallel", build_jobs],
+                cwd=build_temp
+            )
+        except subprocess.CalledProcessError as e:
+            print(f"\n{'='*70}")
+            print("CMAKE BUILD FAILED")
+            print(f"{'='*70}")
+            print("Possible issues:")
+            print("  1. Compilation errors (check C++ code)")
+            print("  2. Missing libraries at link time")
+            print("  3. Insufficient memory (try reducing parallel jobs)")
+            print(f"{'='*70}\n")
+            raise
+
+        print(f"\n{'='*70}")
+        print("BUILD COMPLETED SUCCESSFULLY")
+        print(f"Extension installed to: {extdir}")
+        print(f"{'='*70}\n")
+
 
 # --- Main setup() function ---
 setup(
+    # Package discovery
     packages=find_packages(where='src'),
     package_dir={'': 'src'},
-    ext_modules=[CMakeExtension("orbslam3._core", sourcedir=".")], 
+    
+    # CMake extension 
+    ext_modules=[
+        CMakeExtension("orbslam3._core", sourcedir=".")
+    ],
+    
+    # Custom build command
     cmdclass={"build_ext": CMakeBuild},
+    
+    # Include compiled libraries
     package_data={
-        'orbslam3': ['*.so', '*.pyd', '*.dylib'], 
+        'orbslam3': [
+            '*.so',           # Linux
+            '*.pyd',          # Windows
+            '*.dylib',        # macOS
+            '_version.py',    # Version info
+        ],
     },
+    
     include_package_data=True,
     zip_safe=False,
 )
