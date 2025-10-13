@@ -19,11 +19,9 @@ jobs:
         include:
           - os: ubuntu-22.04
             arch: x86_64
-            cuda_version: "13.0.1"
             enable_cuda: "ON"
           - os: ubuntu-22.04-arm
             arch: aarch64
-            cuda_version: ""
             enable_cuda: "OFF"
 
     runs-on: ${{ matrix.os }}
