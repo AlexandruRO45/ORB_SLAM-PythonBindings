@@ -306,19 +306,18 @@ size_t HardwareDetector::detectMemory()
 
 bool HardwareDetector::detectGPU()
 {
-#ifdef CUDA_ENABLED
+#if HAS_CUDA_RUNTIME
     int deviceCount = 0;
     cudaError_t error = cudaGetDeviceCount(&deviceCount);
     return (error == cudaSuccess && deviceCount > 0);
 #else
-    // Check for OpenCL or other GPU frameworks if needed
     return false;
 #endif
 }
 
 bool HardwareDetector::checkCUDA()
 {
-#ifdef CUDA_ENABLED
+#if HAS_CUDA_RUNTIME
     return detectGPU();
 #else
     return false;
@@ -344,7 +343,7 @@ std::string HardwareDetector::getCPUModel()
 
 std::string HardwareDetector::getGPUModel()
 {
-#ifdef CUDA_ENABLED
+#if HAS_CUDA_RUNTIME
     int deviceCount = 0;
     cudaGetDeviceCount(&deviceCount);
     if (deviceCount > 0) {

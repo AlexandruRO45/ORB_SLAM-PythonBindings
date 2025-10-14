@@ -1,4 +1,4 @@
-name: Build x86_64 + aarch64 Wheels
+name: Build Enhanced x86_64 + aarch64 Wheels with CUDA
 
 on:
   push:
@@ -19,9 +19,11 @@ jobs:
         include:
           - os: ubuntu-22.04
             arch: x86_64
+            cuda_version: "12.9.0"
             enable_cuda: "ON"
           - os: ubuntu-22.04-arm
             arch: aarch64
+            cuda_version: "12.9.0"
             enable_cuda: "OFF"
 
     runs-on: ${{ matrix.os }}
@@ -38,6 +40,7 @@ jobs:
         uses: Jimver/cuda-toolkit@v0.2.24
         id: cuda-toolkit
         with:
+          cuda: ${{ matrix.cuda_version }}
           method: 'network'
           sub-packages: '["nvcc", "cudart"]'
           log-file-suffix: '${{matrix.os}}-${{matrix.arch}}.txt'
