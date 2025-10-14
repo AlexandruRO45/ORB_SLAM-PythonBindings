@@ -78,22 +78,20 @@ class CMakeBuild(build_ext):
             "-Wno-dev",
         ]
         
-        # USE export Pangolin_DIR="<path_to_user>/Pangolin-0.9.1/build" if not system installed
-        pangolin_dir = os.environ.get("Pangolin_DIR")
-        if pangolin_dir:
-            print(f"Found Pangolin_DIR environment variable: {pangolin_dir}")
-            cmake_args.append(f"-DCMAKE_PREFIX_PATH={pangolin_dir}")
-
-        # USE export CUDA_DIR="<path_to_cuda>"
+        # Paths for custom libraries
         if enable_cuda == "ON":
-            cuda_dir = os.environ.get("CUDA_DIR")
+            cuda_dir = os.environ.get("CUDA_DIR") or os.environ.get("CUDATOOLKIT_ROOT") or os.environ.get("CUDAToolkit_ROOT")
             if cuda_dir:
                 print(f"Found CUDA at: {cuda_dir}")
-                os.environ["CUDA_DIR"] = cuda_dir
-                cmake_args.append(f"-DCUDA_DIR={cuda_dir}")
+                cmake_args.append(f"-DCUDAToolkit_ROOT={cuda_dir}") 
                 os.environ["CPATH"] = f"{cuda_dir}/include:" + os.environ.get("CPATH", "")
             else:
                 print("WARNING: CUDA enabled but CUDA_DIR not set")
+
+        pangolin_dir = os.environ.get("Pangolin_DIR") # USE export Pangolin_DIR="<path_to_user>/Pangolin-0.9.1/build" if not system installed
+        if pangolin_dir:
+            print(f"Found Pangolin_DIR environment variable: {pangolin_dir}")
+            cmake_args.append(f"-DCMAKE_PREFIX_PATH={pangolin_dir}")
 
         # Allow user to pass extra CMake arguments via environment variable
         if "CMAKE_ARGS" in os.environ:

@@ -83,6 +83,7 @@ jobs:
             BUILD_ENHANCED_BINDINGS=ON
             ENABLE_CUDA=${{ matrix.enable_cuda }}
             CUDA_DIR=${{ matrix.enable_cuda == 'ON' && steps.cuda-toolkit.outputs.CUDA_PATH || '' }}
+            CUDATOOLKIT_ROOT=${{ matrix.enable_cuda == 'ON' && steps.cuda-toolkit.outputs.CUDA_PATH || '' }}
             Pangolin_DIR=/usr/local/pangolin/lib/cmake/Pangolin
           
           # Repair wheel command to exclude certain shared libraries
