@@ -85,7 +85,6 @@ jobs:
             BUILD_ENHANCED_BINDINGS=ON
             ENABLE_CUDA=${{ matrix.enable_cuda }}
             CUDA_HOME=${{ steps.cuda-toolkit.outputs.CUDA_PATH || '/usr/local/cuda' }}
-            CMAKE_ARGS="-DCMAKE_BUILD_TYPE=Release -DCUDA_TOOLKIT_ROOT_DIR=${{ steps.cuda-toolkit.outputs.CUDA_PATH || '/usr/local/cuda' }}"
             Pangolin_DIR=/usr/local/pangolin/lib/cmake/Pangolin
             PATH=${{ steps.cuda-toolkit.outputs.CUDA_PATH || '/usr/local/cuda' }}/bin:$PATH
             LD_LIBRARY_PATH=${{ steps.cuda-toolkit.outputs.CUDA_PATH || '/usr/local/cuda' }}/lib64:$LD_LIBRARY_PATH

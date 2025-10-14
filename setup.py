@@ -86,10 +86,18 @@ class CMakeBuild(build_ext):
             cmake_args.append(f"-DCMAKE_PREFIX_PATH={pangolin_dir}")
 
         # Check for ORB_SLAM3_DIR if needed
-        orbslam3_dir = os.environ.get("ORB_SLAM3_DIR")
-        if orbslam3_dir:
-            print(f"Found ORB_SLAM3_DIR environment variable: {orbslam3_dir}")
-            cmake_args.append(f"-DORB_SLAM3_DIR={orbslam3_dir}")
+        if enable_cuda == "ON":
+            cuda_home = os.environ.get("CUDA_HOME")
+            if cuda_home:
+                print(f"Found CUDA at: {cuda_home}")
+                cmake_args.extend([
+                    f"-DCUDA_TOOLKIT_ROOT_DIR={cuda_home}",
+                    f"-DCUDAToolkit_ROOT={cuda_home}",
+                    f"-DCUDA_HOME={cuda_home}",
+                ])
+                os.environ["CPATH"] = f"{cuda_home}/include:" + os.environ.get("CPATH", "")
+            else:
+                print("WARNING: CUDA enabled but CUDA_HOME not set")
 
         # Allow user to pass extra CMake arguments via environment variable
         if "CMAKE_ARGS" in os.environ:
