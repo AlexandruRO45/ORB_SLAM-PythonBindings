@@ -89,6 +89,7 @@ class CMakeBuild(build_ext):
             cuda_dir = os.environ.get("CUDA_DIR")
             if cuda_dir:
                 print(f"Found CUDA at: {cuda_dir}")
+                os.environ["CUDA_DIR"] = cuda_dir
                 cmake_args.append(f"-DCUDA_DIR={cuda_dir}")
                 os.environ["CPATH"] = f"{cuda_dir}/include:" + os.environ.get("CPATH", "")
             else:
