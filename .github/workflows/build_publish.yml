@@ -51,8 +51,6 @@ jobs:
           echo "CUDA Path: ${{steps.cuda-toolkit.outputs.CUDA_PATH}}"
           echo "CUDA Version: ${{steps.cuda-toolkit.outputs.cuda}}"
           nvcc --version
-          export PATH=${{steps.cuda-toolkit.outputs.CUDA_PATH}}/bin:$PATH
-          export LD_LIBRARY_PATH=${{steps.cuda-toolkit.outputs.CUDA_PATH}}/lib64:$LD_LIBRARY_PATH
 
       - name: Install Python and cibuildwheel
         run: |
@@ -84,10 +82,8 @@ jobs:
           CIBW_ENVIRONMENT: >
             BUILD_ENHANCED_BINDINGS=ON
             ENABLE_CUDA=${{ matrix.enable_cuda }}
-            CUDA_HOME=${{ steps.cuda-toolkit.outputs.CUDA_PATH || '/usr/local/cuda' }}
+            CUDA_DIR=${{ matrix.enable_cuda == 'ON' && steps.cuda-toolkit.outputs.CUDA_PATH || '' }}
             Pangolin_DIR=/usr/local/pangolin/lib/cmake/Pangolin
-            PATH=${{ steps.cuda-toolkit.outputs.CUDA_PATH || '/usr/local/cuda' }}/bin:$PATH
-            LD_LIBRARY_PATH=${{ steps.cuda-toolkit.outputs.CUDA_PATH || '/usr/local/cuda' }}/lib64:$LD_LIBRARY_PATH
           
           # Repair wheel command to exclude certain shared libraries
           CIBW_REPAIR_WHEEL_COMMAND_LINUX: >
