@@ -110,10 +110,10 @@ jobs:
           CIBW_BUILD: "cp38-* cp39-* cp310-* cp311-* cp312-*"
 
           CIBW_ENVIRONMENT: >
-            BUILD_ENHANCED_BINDINGS = ${{ matrix.build_mode == 'enhanced' && 'ON' || 'OFF' }}
-            ENABLE_CUDA = ${{ matrix.enable_cuda }}
-            CUDA_DIR = ${{ matrix.enable_cuda == 'ON' && matrix.arch == 'x86_64' && steps.cuda-toolkit.outputs.CUDA_PATH || '' }}
-            Pangolin_DIR = /usr/local/pangolin/lib/cmake/Pangolin
+            BUILD_ENHANCED_BINDINGS=${{ matrix.build_mode == 'enhanced' && 'ON' || 'OFF' }}
+            ENABLE_CUDA=${{ matrix.enable_cuda }}
+            CUDA_DIR=${{ matrix.enable_cuda == 'ON' && matrix.arch == 'x86_64' && steps.cuda-toolkit.outputs.CUDA_PATH || '' }}
+            Pangolin_DIR=/usr/local/pangolin/lib/cmake/Pangolin
 
           # auditwheel repair customization (to avoid bundling system libs)
           CIBW_REPAIR_WHEEL_COMMAND_LINUX: >
