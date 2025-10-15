@@ -1,4 +1,4 @@
-name: Build Enhanced x86_64 + aarch64 Wheels with CUDA
+name: Build Enhanced x86_64 + aarch64 Wheels (legacy / enhanced CPU / enhanced CUDA)
 
 on:
   push:
@@ -13,20 +13,44 @@ on:
 
 jobs:
   build-wheels:
-    name: Build wheel on ${{ matrix.os }} (${{ matrix.arch }})
+    name: Build wheels — mode=${{ matrix.build_mode }} arch=${{ matrix.arch }} cuda=${{ matrix.enable_cuda }} version=${{ matrix.cuda_version || 'N/A' }}
     strategy:
       matrix:
         include:
-          - os: ubuntu-22.04
+          # x86_64: enhanced CPU
+          - runs_on: ubuntu-22.04
             arch: x86_64
-            cuda_version: "12.9.0"
-            enable_cuda: "ON"
-          - os: ubuntu-22.04-arm
-            arch: aarch64
-            cuda_version: "12.9.0"
+            build_mode: enhanced
             enable_cuda: "OFF"
+            cuda_version: ""
+          # x86_64: enhanced CUDA
+          - runs_on: ubuntu-22.04
+            arch: x86_64
+            build_mode: enhanced
+            enable_cuda: "ON"
+            cuda_version: "12.9.0"
+          # x86_64: legacy
+          - runs_on: ubuntu-22.04
+            arch: x86_64
+            build_mode: legacy
+            enable_cuda: "OFF"
+            cuda_version: ""
+          # aarch64: enhanced CPU
+          - runs_on: ubuntu-22.04-arm
+            arch: aarch64
+            build_mode: enhanced
+            enable_cuda: "OFF"
+            cuda_version: ""
+          # aarch64: legacy
+          - runs_on: ubuntu-22.04-arm
+            arch: aarch64
+            build_mode: legacy
+            enable_cuda: "OFF"
+            cuda_version: ""
 
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ matrix.runs_on }}
+    permissions:
+      contents: read
 
     steps:
       - name: Checkout source
@@ -34,23 +58,23 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Install CUDA Toolkit
-        if: matrix.enable_cuda == 'ON'
+      - name: Install CUDA Toolkit (x86_64 & when requested)
+        if: matrix.enable_cuda == 'ON' && matrix.arch == 'x86_64'
         uses: Jimver/cuda-toolkit@v0.2.24
         id: cuda-toolkit
         with:
           cuda: ${{ matrix.cuda_version }}
           method: 'network'
           sub-packages: '["nvcc", "cudart"]'
-          log-file-suffix: '${{matrix.os}}-${{matrix.arch}}.txt'
+          log-file-suffix: '${{matrix.runs_on}}-${{matrix.arch}}-cuda.txt'
 
-      - name: Verify CUDA installation
-        if: matrix.enable_cuda == 'ON'
+      - name: Verify CUDA installation (x86_64 & when requested)
+        if: matrix.enable_cuda == 'ON' && matrix.arch == 'x86_64'
         run: |
-          echo "CUDA Path: ${{steps.cuda-toolkit.outputs.CUDA_PATH}}"
-          echo "CUDA Version: ${{steps.cuda-toolkit.outputs.cuda}}"
-          nvcc --version
-          echo "================== CUDA Toolkit Files ==================="
+          echo "CUDA Path: ${{ steps.cuda-toolkit.outputs.CUDA_PATH }}"
+          echo "CUDA Version: ${{ steps.cuda-toolkit.outputs.cuda }}"
+          nvcc --version || true
+          echo "=== CUDA toolkit lib and include preview ==="
           ls -la ${{steps.cuda-toolkit.outputs.CUDA_PATH}}/ || true
           ls -la ${{steps.cuda-toolkit.outputs.CUDA_PATH}}/lib64/ || true
           ls -la ${{steps.cuda-toolkit.outputs.CUDA_PATH}}/lib64/cmake/ || true
@@ -58,16 +82,17 @@ jobs:
           ls -la ${{steps.cuda-toolkit.outputs.CUDA_PATH}}/include/ || true
           which nvcc || true
 
-      - name: Install Python and cibuildwheel
+
+      - name: Install Python tooling
         run: |
-          python3 -m pip install --upgrade pip
+          python3 -m pip install --upgrade pip setuptools wheel
           pip install cibuildwheel==2.16.5
 
       - name: Show architecture info
         run: |
           echo "uname -m: $(uname -m)"
-          echo "arch: $(arch)"
-          lscpu | grep Architecture
+          echo "arch: $(arch || true)"
+          lscpu | grep Architecture || true
 
       - name: Build wheels
         env:
@@ -85,11 +110,12 @@ jobs:
           CIBW_BUILD: "cp38-* cp39-* cp310-* cp311-* cp312-*"
 
           CIBW_ENVIRONMENT: >
-            BUILD_ENHANCED_BINDINGS=ON
-            ENABLE_CUDA=${{ matrix.enable_cuda }}
-            CUDA_DIR=${{ matrix.enable_cuda == 'ON' && steps.cuda-toolkit.outputs.CUDA_PATH || '' }}
-            Pangolin_DIR=/usr/local/pangolin/lib/cmake/Pangolin
+            BUILD_ENHANCED_BINDINGS = ${{ matrix.build_mode == 'enhanced' && 'ON' || 'OFF' }}
+            ENABLE_CUDA = ${{ matrix.enable_cuda }}
+            CUDA_DIR = ${{ matrix.enable_cuda == 'ON' && matrix.arch == 'x86_64' && steps.cuda-toolkit.outputs.CUDA_PATH || '' }}
+            Pangolin_DIR = /usr/local/pangolin/lib/cmake/Pangolin
 
+          # auditwheel repair customization (to avoid bundling system libs)
           CIBW_REPAIR_WHEEL_COMMAND_LINUX: >
             auditwheel repair -w {dest_dir} {wheel}
             --exclude libGL.so.1
@@ -103,10 +129,13 @@ jobs:
         run: |
           python -m cibuildwheel --output-dir wheelhouse
 
-      - name: Upload artifacts
+      - name: List built wheels
+        run: ls -lah wheelhouse || true
+
+      - name: Upload wheelhouse artifact
         uses: actions/upload-artifact@v4
         with:
-          name: wheelhouse-${{ matrix.arch }}-cuda${{ matrix.enable_cuda }}
+          name: wheelhouse-${{ matrix.build_mode }}-${{ matrix.arch }}-cuda${{ matrix.enable_cuda }}${{ matrix.cuda_version || '' }}
           path: wheelhouse/*.whl
 
   publish_to_pypi:
@@ -129,7 +158,15 @@ jobs:
         run: |
           mkdir -p final_dist
           find dist/ -name "*.whl" -exec cp {} final_dist/ \;
-          ls -lh final_dist/
+          echo "Final wheel count:"
+          ls -lh final_dist || true
+
+      - name: Validate wheel filenames (optional check)
+        run: |
+          echo "Wheels to be uploaded:"
+          for f in final_dist/*.whl; do
+            echo " - $(basename "$f")"
+          done
 
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
