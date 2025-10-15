@@ -61,45 +61,42 @@ class CMakeBuild(build_ext):
 
         # Define the arguments to pass to CMake
         cmake_args = [
-            # Tell CMake where to put the resulting library
             f"-DCMAKE_LIBRARY_OUTPUT_DIRECTORY={extdir}{os.sep}",
-            # Pass the Python executable to CMake for discovery
             f"-DPYTHON_EXECUTABLE={sys.executable}",
-            # Set the build type (Release, Debug, etc.)
             f"-DCMAKE_BUILD_TYPE={build_type}",
-            # Pass header paths (though modern find_package(Python) is often sufficient)
             f"-DPYTHON_INCLUDE_DIR={python_include_dir}",
             f"-DNUMPY_INCLUDE_DIR={numpy_include_dir}",
-            # Enhanced bindings flag
             f"-DBUILD_ENHANCED_BINDINGS={build_enhanced}",
-            # CUDA support flag
             f"-DENABLE_CUDA={enable_cuda}",
-            # Suppress unnecessary CMake developer warnings
             "-Wno-dev",
         ]
-        
-        # USE export CUDA_DIR="<path_to_cuda>"
+        prefix_paths = []
+
+        # If CUDA is enabled, add its paths to the prefix list
         if enable_cuda == "ON":
-            cuda_dir = os.environ.get("CUDA_DIR")
+            cuda_dir = os.environ.get("CUDA_DIR") 
             if cuda_dir:
                 print(f"Found CUDA at: {cuda_dir}")
-                cmake_args.append(f"-DCUDA_DIR={cuda_dir}")
-                # Set CUDA environment variables for CMake to find CUDA
-                os.environ["CUDACXX"] = f"{cuda_dir}/bin/nvcc"
-                os.environ["CUDA_PATH"] = cuda_dir
-                os.environ["CUDA_HOME"] = cuda_dir
-                os.environ["CPATH"] = f"{cuda_dir}/include:" + os.environ.get("CPATH", "")
-                os.environ["LD_LIBRARY_PATH"] = f"{cuda_dir}/lib64:" + os.environ.get("LD_LIBRARY_PATH", "")
+                libcudacxx_path = os.path.join(cuda_dir, "lib64", "cmake", "libcudacxx")
+                print(f"Set libcudacxx environment variable at: {libcudacxx_path}")
+                prefix_paths.append(libcudacxx_path)
             else:
-                print("WARNING: CUDA enabled but CUDA_DIR not set")
+                print("WARNING: ENABLE_CUDA is ON, but CUDA_DIR environment variable is not set.")
 
-        # USE export Pangolin_DIR="<path_to_user>/Pangolin-0.9.1/build"
+        # Add Pangolin build directory to the prefix list
+        # USE: export Pangolin_DIR="<path_to_user>/Pangolin/build"
         pangolin_dir = os.environ.get("Pangolin_DIR") 
         if pangolin_dir:
             print(f"Found Pangolin_DIR environment variable: {pangolin_dir}")
-            cmake_args.append(f"-DCMAKE_PREFIX_PATH={pangolin_dir}")
+            prefix_paths.append(pangolin_dir)
         else:
-            print("WARNING: Pangolin not set properly, make sure to export the path")
+            print("WARNING: Pangolin_DIR not set. Pangolin might not be found by CMake.")
+        
+        # Join all collected paths and add the final CMAKE_PREFIX_PATH argument
+        if prefix_paths:
+            joined_paths = ";".join(prefix_paths)
+            print(f"Amending CMAKE_PREFIX_PATH with: {joined_paths}")
+            cmake_args.append(f'-DCMAKE_PREFIX_PATH={joined_paths}')
 
         # Allow user to pass extra CMake arguments via environment variable
         if "CMAKE_ARGS" in os.environ:

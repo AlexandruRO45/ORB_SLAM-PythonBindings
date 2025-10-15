@@ -34,7 +34,6 @@ jobs:
         with:
           submodules: recursive
 
-      # Install CUDA Toolkit (only on x86_64)
       - name: Install CUDA Toolkit
         if: matrix.enable_cuda == 'ON'
         uses: Jimver/cuda-toolkit@v0.2.24
@@ -84,25 +83,13 @@ jobs:
           CIBW_SKIP: "*-musllinux*"
           CIBW_BUILD_VERBOSITY: 1
           CIBW_BUILD: "cp38-* cp39-* cp310-* cp311-* cp312-*"
-          
-          ENABLE_CUDA: ${{ matrix.enable_cuda }}
-          CUDA_DIR: ${{ matrix.enable_cuda == 'ON' && steps.cuda-toolkit.outputs.CUDA_PATH || '' }}
-          CUDACXX: ${{ matrix.enable_cuda == 'ON' && format('{0}/bin/nvcc', steps.cuda-toolkit.outputs.CUDA_PATH) || '' }}
-          CUDA_PATH: ${{ steps.cuda-toolkit.outputs.CUDA_PATH }}
-          CUDA_HOME: ${{ steps.cuda-toolkit.outputs.CUDA_PATH }}
 
-          # Enhanced bindings + CUDA configuration
           CIBW_ENVIRONMENT: >
             BUILD_ENHANCED_BINDINGS=ON
             ENABLE_CUDA=${{ matrix.enable_cuda }}
-            CUDA_DIR=${{ steps.cuda-toolkit.outputs.CUDA_PATH }}
-            CUDACXX=${{ steps.cuda-toolkit.outputs.CUDA_PATH }}/bin/nvcc
-            CUDA_PATH=${{ steps.cuda-toolkit.outputs.CUDA_PATH }}
-            CUDA_HOME=${{ steps.cuda-toolkit.outputs.CUDA_PATH }}
-            LD_LIBRARY_PATH=${{ steps.cuda-toolkit.outputs.CUDA_PATH }}/lib64:$LD_LIBRARY_PATH
+            CUDA_DIR=${{ matrix.enable_cuda == 'ON' && steps.cuda-toolkit.outputs.CUDA_PATH || '' }}
             Pangolin_DIR=/usr/local/pangolin/lib/cmake/Pangolin
-          
-          # Repair wheel command to exclude certain shared libraries
+
           CIBW_REPAIR_WHEEL_COMMAND_LINUX: >
             auditwheel repair -w {dest_dir} {wheel}
             --exclude libGL.so.1
@@ -111,7 +98,7 @@ jobs:
             --exclude libEGL.so.1
             --exclude libOpenGL.so.0
             --exclude libGLdispatch.so.0
-            --exclude libcuda.so.1
+            --exclude libcudart.so
             --exclude libcudart.so.12
         run: |
           python -m cibuildwheel --output-dir wheelhouse

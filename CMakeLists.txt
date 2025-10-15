@@ -24,24 +24,18 @@ else()
 endif()
 
 if(ENABLE_CUDA)
-  message(STATUS "CUDA support ENABLED for hardware detection")
-  
-  # Enable CUDA language support
-  enable_language(CUDA)
-  
-  if(DEFINED ENV{CUDA_DIR})
-    set(CUDA_TOOLKIT_ROOT_DIR "$ENV{CUDA_DIR}")
-    message(STATUS "Using CUDA_DIR from environment: $ENV{CUDA_DIR}")
+  if(DEFINED CUDA_DIR)
+    set(_cuda_root "${CUDA_DIR}")
+  elseif(DEFINED ENV{CUDA_DIR})
+    set(_cuda_root "$ENV{CUDA_DIR}")
   endif()
-  
-  # Find CUDA package
-  find_package(CUDA REQUIRED)
-  
-  if(CUDA_FOUND)
-    message(STATUS "Found CUDA ${CUDA_VERSION_STRING}")
-    message(STATUS "CUDA Include: ${CUDA_INCLUDE_DIRS}")
-    message(STATUS "CUDA Libraries: ${CUDA_LIBRARIES}")
-    add_definitions(-DENABLE_CUDA)
+
+  if(_cuda_root)
+    # Expose lib64 and cmake prefix path that contains libcudacxx
+    set(CUDAToolkit_ROOT "${_cuda_root}/lib64" CACHE PATH "CUDA root for CUDAToolkit" FORCE)
+    list(APPEND CMAKE_PREFIX_PATH "${_cuda_root}/lib64/cmake/libcudacxx:")
+    message(STATUS "Mapped CUDA_DIR to CUDAToolkit_ROOT: ${CUDAToolkit_ROOT}")
+    message(STATUS "Appended to CMAKE_PREFIX_PATH: ${_cuda_root}/lib64/cmake/libcudacxx")
     set(CUDA_SUPPORT_ENABLED ON)
   else()
     message(WARNING "CUDA requested but not found - proceeding without GPU support")
