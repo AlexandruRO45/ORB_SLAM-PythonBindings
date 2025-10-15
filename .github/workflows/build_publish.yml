@@ -55,6 +55,7 @@ jobs:
           ls -la ${{steps.cuda-toolkit.outputs.CUDA_PATH}}/ || true
           ls -la ${{steps.cuda-toolkit.outputs.CUDA_PATH}}/lib64/ || true
           ls -la ${{steps.cuda-toolkit.outputs.CUDA_PATH}}/lib64/cmake/ || true
+          ls -la ${{steps.cuda-toolkit.outputs.CUDA_PATH}}/lib64/cmake/libcudacxx || true
           ls -la ${{steps.cuda-toolkit.outputs.CUDA_PATH}}/include/ || true
           which nvcc || true
 
