@@ -51,6 +51,11 @@ jobs:
           echo "CUDA Path: ${{steps.cuda-toolkit.outputs.CUDA_PATH}}"
           echo "CUDA Version: ${{steps.cuda-toolkit.outputs.cuda}}"
           nvcc --version
+          echo "================== CUDA Toolkit Files ==================="
+          ls -la ${{steps.cuda-toolkit.outputs.CUDA_PATH}}/ || true
+          ls -la ${{steps.cuda-toolkit.outputs.CUDA_PATH}}/lib64/ || true
+          ls -la ${{steps.cuda-toolkit.outputs.CUDA_PATH}}/include/ || true
+          which nvcc || true
 
       - name: Install Python and cibuildwheel
         run: |
@@ -78,12 +83,21 @@ jobs:
           CIBW_BUILD_VERBOSITY: 1
           CIBW_BUILD: "cp38-* cp39-* cp310-* cp311-* cp312-*"
           
+          ENABLE_CUDA: ${{ matrix.enable_cuda }}
+          CUDA_DIR: ${{ matrix.enable_cuda == 'ON' && steps.cuda-toolkit.outputs.CUDA_PATH || '' }}
+          CUDACXX: ${{ matrix.enable_cuda == 'ON' && format('{0}/bin/nvcc', steps.cuda-toolkit.outputs.CUDA_PATH) || '' }}
+          CUDA_PATH: ${{ steps.cuda-toolkit.outputs.CUDA_PATH }}
+          CUDA_HOME: ${{ steps.cuda-toolkit.outputs.CUDA_PATH }}
+
           # Enhanced bindings + CUDA configuration
           CIBW_ENVIRONMENT: >
             BUILD_ENHANCED_BINDINGS=ON
             ENABLE_CUDA=${{ matrix.enable_cuda }}
-            CUDA_DIR=${{ matrix.enable_cuda == 'ON' && steps.cuda-toolkit.outputs.CUDA_PATH || '' }}
-            CUDATOOLKIT_ROOT=${{ matrix.enable_cuda == 'ON' && steps.cuda-toolkit.outputs.CUDA_PATH || '' }}
+            CUDA_DIR=${{ steps.cuda-toolkit.outputs.CUDA_PATH }}
+            CUDACXX=${{ steps.cuda-toolkit.outputs.CUDA_PATH }}/bin/nvcc
+            CUDA_PATH=${{ steps.cuda-toolkit.outputs.CUDA_PATH }}
+            CUDA_HOME=${{ steps.cuda-toolkit.outputs.CUDA_PATH }}
+            LD_LIBRARY_PATH=${{ steps.cuda-toolkit.outputs.CUDA_PATH }}/lib64:$LD_LIBRARY_PATH
             Pangolin_DIR=/usr/local/pangolin/lib/cmake/Pangolin
           
           # Repair wheel command to exclude certain shared libraries

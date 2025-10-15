@@ -24,44 +24,36 @@ else()
 endif()
 
 if(ENABLE_CUDA)
-  # Allow either -DCUDA_DIR=... or ENV{CUDA_DIR}
-  if(DEFINED CUDA_DIR)
-    set(_cuda_root "${CUDA_DIR}")
-  elseif(DEFINED ENV{CUDA_DIR})
-    set(_cuda_root "$ENV{CUDA_DIR}")
+  message(STATUS "CUDA support ENABLED for hardware detection")
+  
+  # Enable CUDA language support
+  enable_language(CUDA)
+  
+  if(DEFINED ENV{CUDA_DIR})
+    set(CUDA_TOOLKIT_ROOT_DIR "$ENV{CUDA_DIR}")
+    message(STATUS "Using CUDA_DIR from environment: $ENV{CUDA_DIR}")
   endif()
-
-  if(_cuda_root)
-    message(STATUS "Setting CUDAToolkit root from CUDA_DIR: ${_cuda_root}")
-    # Expose to CMake find_package as CUDAToolkit root
-    set(CUDAToolkit_ROOT "${_cuda_root}" CACHE PATH "CUDA root (from CUDA_DIR or ENV{CUDA_DIR})" FORCE)
-  endif()
-
-  # Prefer modern CMake discovery (CMake >= 3.17). Use QUIET so we can fallback.
-  find_package(CUDAToolkit QUIET)
-
-  if(TARGET CUDAToolkit::cudart)
-    message(STATUS "CUDA support ENABLED via CUDAToolkit (${CUDAToolkit_VERSION})")
-    add_compile_definitions(-DENABLE_CUDA)
+  
+  # Find CUDA package
+  find_package(CUDA REQUIRED)
+  
+  if(CUDA_FOUND)
+    message(STATUS "Found CUDA ${CUDA_VERSION_STRING}")
+    message(STATUS "CUDA Include: ${CUDA_INCLUDE_DIRS}")
+    message(STATUS "CUDA Libraries: ${CUDA_LIBRARIES}")
+    add_definitions(-DENABLE_CUDA)
     set(CUDA_SUPPORT_ENABLED ON)
-    # Note: linking will be done later via the imported target
   else()
-    # Fallback to legacy FindCUDA if modern CUDAToolkit isn't available
-    find_package(CUDA QUIET)
-    if(CUDA_FOUND)
-      message(STATUS "Found legacy CUDA via FindCUDA: ${CUDA_VERSION}")
-      add_compile_definitions(-DENABLE_CUDA)
-      set(CUDA_SUPPORT_ENABLED ON)
-      # preserve legacy cudart var for linking
-      set(CUDA_LINK_LIBS ${CUDA_CUDART_LIBRARY})
-    else()
-      message(WARNING "CUDA requested but not found; disabling CUDA support")
-      set(CUDA_SUPPORT_ENABLED OFF)
-    endif()
+    message(WARNING "CUDA requested but not found - proceeding without GPU support")
+    message(STATUS "Hardware detection will still work, but will report gpu_available=false")
+    set(ENABLE_CUDA OFF)
+    set(CUDA_SUPPORT_ENABLED OFF)
   endif()
 else()
   set(CUDA_SUPPORT_ENABLED OFF)
 endif()
+
+
 # ============================================================================
 # FIND DEPENDENCIES
 # ============================================================================
@@ -175,6 +167,9 @@ endif()
 if(Eigen3_FOUND)
   target_include_directories(${PYTHON_MODULE_NAME} PRIVATE ${EIGEN3_INCLUDE_DIR})
 endif()
+if(CUDA_SUPPORT_ENABLED)
+  target_include_directories(${PYTHON_MODULE_NAME} PRIVATE ${CUDA_INCLUDE_DIRS})
+endif()
 
 # Link the python module against the core ORB_SLAM3 library and other dependencies
 target_link_libraries(${PYTHON_MODULE_NAME} PRIVATE
@@ -186,10 +181,11 @@ target_link_libraries(${PYTHON_MODULE_NAME} PRIVATE
 if(Pangolin_FOUND)
   target_link_libraries(${PYTHON_MODULE_NAME} PRIVATE ${Pangolin_LIBRARIES})
 endif()
-if(CUDA_SUPPORT_ENABLED AND TARGET CUDAToolkit::cudart)
-  target_link_libraries(${PYTHON_MODULE_NAME} PRIVATE CUDAToolkit::cudart)
-elseif(CUDA_SUPPORT_ENABLED AND DEFINED CUDA_LINK_LIBS)
-  target_link_libraries(${PYTHON_MODULE_NAME} PRIVATE ${CUDA_LINK_LIBS})
+if(CUDA_SUPPORT_ENABLED)
+  target_link_libraries(${PYTHON_MODULE_NAME} PRIVATE 
+    ${CUDA_LIBRARIES}
+    ${CUDA_CUDART_LIBRARY}
+  )
 endif()
 
 # Platform-specific libraries for hardware detection
@@ -220,10 +216,10 @@ set_target_properties(${PYTHON_MODULE_NAME} PROPERTIES
   INSTALL_RPATH_USE_LINK_PATH TRUE
 )
 
+
 # ============================================================================
 # INSTALLATION (Optional)
 # ============================================================================
-
 # Uncomment if you want to install the module system-wide
 # install(TARGETS ${PYTHON_MODULE_NAME}
 #   LIBRARY DESTINATION ${Python_SITEARCH}/orbslam3
@@ -233,7 +229,6 @@ set_target_properties(${PYTHON_MODULE_NAME} PROPERTIES
 # ============================================================================
 # BUILD SUMMARY
 # ============================================================================
-
 message(STATUS "")
 message(STATUS "=================================================================")
 message(STATUS "ORB-SLAM3 Python Bindings Configuration Summary")
@@ -253,7 +248,8 @@ if(Eigen3_FOUND)
 message(STATUS "  - Eigen3:              ${Eigen3_VERSION}")
 endif()
 if(CUDA_SUPPORT_ENABLED)
-message(STATUS "  - CUDA:                ${CUDA_VERSION}")
+message(STATUS "  - CUDA:                ${CUDA_VERSION_STRING}")
+message(STATUS "  - CUDA Path:           ${CUDA_TOOLKIT_ROOT_DIR}")
 endif()
 message(STATUS "")
 message(STATUS "Compiler Flags:")
