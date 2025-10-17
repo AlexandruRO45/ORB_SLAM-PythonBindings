@@ -1,20 +1,56 @@
 [build-system]
-requires = ["setuptools>=42", "wheel", "scikit-build>=0.17", "cmake>=3.18", "numpy"]
+requires = [
+    "setuptools>=42",
+    "wheel",
+    "scikit-build>=0.17",
+    "cmake>=3.18",
+    "numpy>=1.21.0",
+]
 build-backend = "setuptools.build_meta"
 
-# PEP 621 Project metadata
+
+# ============================================================================
+# PEP 621 Project Metadata
+# ============================================================================
+
 [project]
 name = "orbslam3-python"
-version = "1.0.1"
-description = "Python bindings for the ORB-SLAM3 visual SLAM library"
-maintainers = [{ name = "Alex S.", email = "savaalexandru562@gmail.com" }]
+version = "2.0.0"
+description = "Enhanced Python bindings for ORB-SLAM3 with hardware adaptation and performance monitoring"
+authors = [
+    { name = "Alex S.", email = "savaalexandru562@gmail.com" }
+]
+maintainers = [
+    { name = "Alex S.", email = "savaalexandru562@gmail.com" }
+]
 license = { file = "LICENSE" }
 readme = "README.md"
 requires-python = ">=3.8"
+
+keywords = [
+    "slam",
+    "orb-slam",
+    "visual-slam",
+    "computer-vision",
+    "robotics",
+    "odometry",
+    "localization",
+    "mapping",
+]
+
 classifiers = [
+    # Development Status
+    'Development Status :: 4 - Beta',
+    
+    # Intended Audience
     'Intended Audience :: Developers',
     'Intended Audience :: Science/Research',
+    'Intended Audience :: Education',
+    
+    # License
     'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
+    
+    # Programming Language
     'Programming Language :: C++',
     'Programming Language :: Python :: 3',
     'Programming Language :: Python :: 3 :: Only',
@@ -23,21 +59,139 @@ classifiers = [
     'Programming Language :: Python :: 3.10',
     'Programming Language :: Python :: 3.11',
     'Programming Language :: Python :: 3.12',
+    
+    # Operating System
     'Operating System :: POSIX :: Linux',
+    'Operating System :: MacOS',
+    
+    # Topic
+    'Topic :: Scientific/Engineering :: Image Recognition',
     'Topic :: Scientific/Engineering :: Image Processing',
     'Topic :: Scientific/Engineering :: Artificial Intelligence',
     'Topic :: Software Development :: Libraries :: Python Modules',
+    'Topic :: Multimedia :: Video',
 ]
 
-# These are the RUNTIME dependencies
-dependencies = ["numpy>=1.21.0", "opencv-python>=4.5.0"]
+
+# ============================================================================
+# Runtime Dependencies
+# ============================================================================
+
+dependencies = [
+    "numpy>=1.21.0",
+    "opencv-python>=4.5.0",
+]
+
+
+# ============================================================================
+# Optional Dependencies
+# ============================================================================
 
 [project.optional-dependencies]
-test = ["pytest>=6.0"]
-dev = ["pytest>=6.0", "build", "twine"]
+# Testing dependencies
+test = [
+    "pytest>=6.0",
+    "pytest-cov>=3.0",
+]
 
-# Update these URLs to your actual repository
+# Development dependencies
+dev = [
+    "pytest>=6.0",
+    "pytest-cov>=3.0",
+    "build",
+    "twine",
+    "black>=22.0",
+    "flake8>=4.0",
+    "mypy>=0.950",
+]
+
+# Documentation dependencies
+docs = [
+    "sphinx>=4.0",
+    "sphinx-rtd-theme>=1.0",
+    "sphinx-autodoc-typehints>=1.12",
+]
+
+# Full installation (all optional dependencies)
+full = [
+    "orbslam3-python[test,dev,docs]",
+]
+
+
+# ============================================================================
+# Project URLs
+# ============================================================================
+
 [project.urls]
+"Homepage" = "https://github.com/AlexandruRO45/ORB_SLAM-PythonBindings/"
 "Bug Tracker" = "https://github.com/AlexandruRO45/ORB_SLAM-PythonBindings/issues"
-"Source" = "https://github.com/AlexandruRO45/ORB_SLAM-PythonBindings/"
-"Documentation" = "https://github.com/AlexandruRO45/ORB_SLAM-PythonBindings/"
+"Documentation" = "https://github.com/AlexandruRO45/ORB_SLAM-PythonBindings/blob/main/README.md"
+"Source Code" = "https://github.com/AlexandruRO45/ORB_SLAM-PythonBindings/"
+"Changelog" = "https://github.com/AlexandruRO45/ORB_SLAM-PythonBindings/blob/main/CHANGELOG.md"
+
+
+# ============================================================================
+# Tool Configurations
+# ============================================================================
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["orbslam3*"]
+exclude = ["tests*", "docs*"]
+
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "--verbose",
+    "--strict-markers",
+    "--cov=orbslam3",
+    "--cov-report=term-missing",
+    "--cov-report=html",
+]
+
+
+[tool.black]
+line-length = 100
+target-version = ['py38', 'py39', 'py310', 'py311', 'py312']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | build
+  | dist
+)/
+'''
+
+
+[tool.mypy]
+python_version = "3.8"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+ignore_missing_imports = true
+
+
+[tool.flake8]
+max-line-length = 100
+extend-ignore = ["E203", "W503"]
+exclude = [
+    ".git",
+    "__pycache__",
+    "build",
+    "dist",
+    ".eggs",
+    "*.egg-info",
+]

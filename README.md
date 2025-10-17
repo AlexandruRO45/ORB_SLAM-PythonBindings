@@ -2,10 +2,48 @@
 
 Python bindings for the ORB-SLAM3 visual SLAM library.
 
-## Installation
+## Installation online via pypi
 
 ```bash
 pip install orbslam3-python
+```
+
+## Installation locally
+
+#### 1. Basic installation (enhanced bindings by default)
+```bash
+pip install -e .
+```
+
+#### 2. Legacy bindings only
+```bash
+BUILD_ENHANCED_BINDINGS=OFF pip install -e .
+```
+
+#### 3. Enhanced bindings with CUDA support
+```bash
+BUILD_ENHANCED_BINDINGS=ON ENABLE_CUDA=ON pip install -e .
+```
+
+#### 4. Development installation with all tools
+```bash
+pip install -e ".[dev]"
+```
+
+#### 5. With custom Pangolin path
+```bash
+export Pangolin_DIR="/path/to/Pangolin/build"
+pip install -e .
+```
+
+#### 6. Debug build
+```bash
+CMAKE_BUILD_TYPE=Debug pip install -e .
+```
+
+#### 7. Custom parallel build jobs
+```bash
+CMAKE_BUILD_PARALLEL_LEVEL=4 pip install -e .
 ```
 
 <details>
